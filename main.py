@@ -1,6 +1,7 @@
 import requests
 import json
 
+teamSample = [1573, 1574, 1576, 1577, 1580, 1657, 1690, 1937, 1942, 1954, 2096, 2212, 2230, 2231, 2630, 2679, 3065, 3075, 3083, 3211, 3316, 3339, 3388, 3835, 4319, 4320, 4338, 4416, 4586, 4590, 4661, 4744, 5315, 5291, 5554, 5614, 5635, 5715, 5928, 5951, 5987, 5990, 6104, 6168, 6230, 6738, 6740, 6741, 7039, 7067, 7112, 7177, 7845, 8175, 8223, 8843]
 
 def is_team_in_alliance(alliance, teamKey):
     for team in alliance:
@@ -51,14 +52,14 @@ if fileToGenerate == '1':
 
 elif fileToGenerate == '2':
     teamsWithGames = "["
-    for i in range(10000):
+    for i in teamSample:
         print("gets games from team frc" + str(i))
         x = requests.get(address + 'team/frc' + str(i) + '/matches/2018/simple', headers={"X-TBA-Auth-Key": authKey})
         if x.text[0] != '{':
-            team = "{\"teamKey\":\"frc" + str(i) + "\", \"average_normalized_score\":0 \"matches\":"
+            team = "{\"teamKey\":\"frc" + str(i) + "\", \"average_normalized_score\":0, \"matches\":"
             team += x.text + "}"
             teamsWithGames += team + ","
-    teamsWithGames = teamsWithGames[:len(teamsWithGames) - 2] + "]"
+    teamsWithGames = teamsWithGames[:len(teamsWithGames) - 2] + "}]"
     json_object = json.dumps(json.loads(teamsWithGames), indent=4)
     with open("teams.json", "w") as outfile:
         outfile.write(json_object)
