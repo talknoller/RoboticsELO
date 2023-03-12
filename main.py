@@ -2,15 +2,11 @@ import requests
 import json
 import random
 import sys
+import constants
 
-sample_start_year = 2014
-sample_end_year = 2021
-test_start_year = 2022
-test_end_year = 2023
 starter_elo = 2000
 
 sys.setrecursionlimit(3000)
-authKey = "zTmnnKUveaky77Kgv3waDEu6VPrqsMVKcpglKg2so4eey7UEv9uJFfuxGg54rvOj"
 
 k = 72
 
@@ -18,7 +14,7 @@ k = 72
 def get_event_average_alliance_score(event_key):
     print("getting matches from " + event_key)
     x = requests.get("https://www.thebluealliance.com/api/v3/event/" + event_key + "/matches",
-                     headers={"X-TBA-Auth-Key": authKey})
+                     headers={"X-TBA-Auth-Key": constants.AUTH_KEY})
     matches = x.json()
     average_score = 0
     for match in matches:
@@ -140,20 +136,20 @@ fileToGenerate = input("1. get sample and test matches. reset teams' elo \n"
 if fileToGenerate == '1':
     sample_events = []
     test_events = []
-    for i in range(sample_start_year, sample_end_year):
+    for i in range(constants.SAMPLE_YEAR_START, constants.SAMPLE_YEAR_END):
         print("fetching data from year " + str(i))
         x = requests.get("https://www.thebluealliance.com/api/v3/events/" + str(i),
-                         headers={"X-TBA-Auth-Key": authKey})
+                         headers={"X-TBA-Auth-Key": constants.AUTH_KEY})
         events = x.json()
         for event in events:
             if event["event_type_string"] == 'Championship Finals' or event[
                 "event_type_string"] == 'Championship Division':
                 sample_events.append(event["key"])
 
-    for i in range(test_start_year, test_end_year):
+    for i in range(constants.TEST_YEAR_START, constants.TEST_YEAR_END):
         print("fetching data from year " + str(i))
         x = requests.get("https://www.thebluealliance.com/api/v3/events/" + str(i),
-                         headers={"X-TBA-Auth-Key": authKey})
+                         headers={"X-TBA-Auth-Key": constants.AUTH_KEY})
         events = x.json()
         for event in events:
             if event["event_type_string"] == 'Championship Finals' or event[
@@ -164,7 +160,7 @@ if fileToGenerate == '1':
     for event in sample_events:
         print("fetching teams from " + event)
         x = requests.get("https://www.thebluealliance.com/api/v3/event/" + event + "/teams/simple",
-                         headers={"X-TBA-Auth-Key": authKey})
+                         headers={"X-TBA-Auth-Key": constants.AUTH_KEY})
         event_teams = x.json()
         for team in event_teams:
             teams_array.append(team["key"])
@@ -173,7 +169,7 @@ if fileToGenerate == '1':
     for event in test_events:
         print("fetching team's data from " + event)
         x = requests.get("https://www.thebluealliance.com/api/v3/event/" + event + "/teams/simple",
-                         headers={"X-TBA-Auth-Key": authKey})
+                         headers={"X-TBA-Auth-Key": constants.AUTH_KEY})
         event_teams = x.json()
         for team in event_teams:
             teams_array.append(team["key"])
@@ -184,7 +180,7 @@ if fileToGenerate == '1':
     for i in sample_events:
         print("fetching matches from " + i)
         x = requests.get("https://www.thebluealliance.com/api/v3/event/" + i + "/matches",
-                         headers={"X-TBA-Auth-Key": authKey})
+                         headers={"X-TBA-Auth-Key": constants.AUTH_KEY})
         eventMatches = x.json()
         sample_matches = sample_matches + eventMatches
 
@@ -198,7 +194,7 @@ if fileToGenerate == '1':
     for i in test_events:
         print("fetching matches from " + i)
         x = requests.get("https://www.thebluealliance.com/api/v3/event/" + i + "/matches",
-                         headers={"X-TBA-Auth-Key": authKey})
+                         headers={"X-TBA-Auth-Key": constants.AUTH_KEY})
 
         eventMatches = x.json()
         test_matches = test_matches + eventMatches
@@ -357,9 +353,9 @@ elif fileToGenerate == '8':
 
 elif fileToGenerate == '9':
     all_events = "{"
-    for i in range(sample_start_year, sample_end_year):
+    for i in range(constants.SAMPLE_YEAR_START, constants.SAMPLE_YEAR_END):
         x = requests.get("https://www.thebluealliance.com/api/v3/events/" + str(i) + "/simple",
-                         headers={"X-TBA-Auth-Key": authKey})
+                         headers={"X-TBA-Auth-Key": constants.AUTH_KEY})
         events_raw = x.json()
 
         events = []
@@ -382,7 +378,7 @@ elif fileToGenerate == '9':
 elif fileToGenerate == '10':
     f = open('sample_events.json')
     events_score = json.load(f)
-    for i in range(sample_start_year, sample_end_year):
+    for i in range(constants.SAMPLE_YEAR_START, constants.SAMPLE_YEAR_END):
         max_event_score = 0
         for event in events_score[str(i)]:
             if events_score[str(i)][event] > max_event_score:
@@ -408,9 +404,9 @@ elif fileToGenerate == '11':
     teams_data = teams_data[:len(teams_data) - 1] + "}"
     teams_data = json.loads(teams_data)
 
-    for i in range(sample_start_year, sample_end_year):
+    for i in range(constants.SAMPLE_YEAR_START, constants.SAMPLE_YEAR_END):
         x = requests.get("https://www.thebluealliance.com/api/v3/events/" + str(i) + "/simple",
-                         headers={"X-TBA-Auth-Key": authKey})
+                         headers={"X-TBA-Auth-Key": constants.AUTH_KEY})
         events = x.json()
         events_keys = []
         for event in events:
@@ -419,7 +415,7 @@ elif fileToGenerate == '11':
         for key in events_keys:
             print("get data from " + key)
             x = requests.get("https://www.thebluealliance.com/api/v3/event/" + key + "/teams/keys",
-                             headers={"X-TBA-Auth-Key": authKey})
+                             headers={"X-TBA-Auth-Key": constants.AUTH_KEY})
             teams_in_event = x.json()
             event_normalized_score = events_data[str(i)][key]
             for team in teams_in_event:
