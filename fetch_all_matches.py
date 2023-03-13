@@ -5,7 +5,6 @@ import constants
 
 def get_data_from_raw_match(raw_match):
     return {
-        "key": raw_match["key"],
         "alliances": raw_match["alliances"],
         "winning_alliance": raw_match["winning_alliance"],
         "comp_level": raw_match["comp_level"]

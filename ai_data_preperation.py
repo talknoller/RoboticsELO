@@ -1,4 +1,6 @@
 import json
+
+import numpy as np
 from tensorflow import keras
 
 
@@ -28,6 +30,7 @@ def get_matches_results(matches):
     for match in matches:
         match_results.append(get_match_result(match))
     return match_results
+
 
 def get_alliances(matches):
     match_alliances = []
@@ -76,8 +79,7 @@ def flatten_matches(matches, teams_data):
 
 def run(flattened_train_matches, match_train_results,
         flattened_test_matches, match_test_results,
-        match_test_alliances, test_matches):
-
+        match_test_alliances):
     class_names = ['red win', 'blue win', 'tie']
 
     model = keras.Sequential([
@@ -91,9 +93,14 @@ def run(flattened_train_matches, match_train_results,
     model.fit(flattened_train_matches, match_train_results, epochs=5)
 
     prediction = model.predict(flattened_test_matches)
-
+    correct_guesses = 0
+    guesses = 0
     for i in range(len(prediction)):
-        print("match key:" + test_matches[i]["key"])
+        if np.amax(prediction[i]) > 0.65:
+            guesses += 1
+            if match_test_results[i] == np.argmax(prediction[i]):
+                correct_guesses += 1
+
         print("red alliance:")
         print(match_test_alliances[i][0])
         print("blue alliance:")
@@ -103,3 +110,4 @@ def run(flattened_train_matches, match_train_results,
         print("blue win: " + str(prediction[i][1]))
         print("tie: " + str(prediction[i][2]))
         print("actual result:" + class_names[match_test_results[i]])
+    print(correct_guesses / guesses)

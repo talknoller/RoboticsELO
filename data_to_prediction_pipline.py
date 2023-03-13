@@ -1,7 +1,5 @@
 import json
-
 import requests
-
 import constants
 import fetch_events_keys as event_keys_fetcher
 import fetch_all_events as event_data_fetcher
