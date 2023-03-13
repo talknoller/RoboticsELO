@@ -1,7 +1,8 @@
 import json
+from tensorflow import keras
 
 
-def match_result(match):
+def get_match_result(match):
     if match["winning_alliance"] == 'red':
         return 0
     if match["winning_alliance"] == 'blue':
@@ -9,36 +10,96 @@ def match_result(match):
     return 2
 
 
-def is_match_qual(match):
-    if match["comp_level"] == 'qm':
+def is_match_qual(comp_level_string):
+    if comp_level_string == 'qm':
         return 1
     return 0
 
 
-f = open("all_matches.json")
-matches = json.load(f)
-f.close()
+def flatten_team(team_data):
+    return [team_data["number_of_matches"], team_data["number_of_events"],
+            team_data["average_playoff_level"], team_data["average_pick"],
+            team_data["win_rate"], team_data["average_rank"],
+            team_data["average_normalized_score"]]
 
-f = open("all_teams_train.json")
-teams = json.load(f)
-f.close()
 
-matches_data_array = []
-results = []
-for match in matches:
-    results.append(match_result(match))
-    match_data_array = [is_match_qual(match)]
-    teams_in_match = match["alliances"]["blue"]["team_keys"] + match["alliances"]["red"]["team_keys"]
+def get_matches_results(matches):
+    match_results = []
+    for match in matches:
+        match_results.append(get_match_result(match))
+    return match_results
 
-    for team in teams_in_match:
-        match_data_array.append(teams[team]["number_of_matches"])
-        match_data_array.append(teams[team]["number_of_events"])
-        match_data_array.append(teams[team]["average_playoff_level"])
-        match_data_array.append(teams[team]["average_pick"])
-        match_data_array.append(teams[team]["win_rate"])
-        match_data_array.append(teams[team]["average_rank"])
-        match_data_array.append(teams[team]["average_normalized_score"])
-    matches_data_array.append(match_data_array)
+def get_alliances(matches):
+    match_alliances = []
 
-print(matches_data_array)
-print(results)
+    for match in matches:
+        does_team_exist = True
+        blue_teams = []
+        red_teams = []
+        for team in match["alliances"]["blue"]["team_keys"]:
+            try:
+                blue_teams.append(team)
+            except:
+                does_team_exist = False
+        for team in match["alliances"]["red"]["team_keys"]:
+            try:
+                red_teams.append(team)
+            except:
+                does_team_exist = False
+        if does_team_exist:
+            match_alliances.append([red_teams, blue_teams])
+    return match_alliances
+
+
+def flatten_matches(matches, teams_data):
+    flattened_train_matches = []
+    match_train_results = []
+    for match in matches:
+        does_team_exist = True
+        match_train_results.append(get_match_result(match))
+        match_data = []
+        for team in match["alliances"]["blue"]["team_keys"]:
+            try:
+                match_data += flatten_team(teams_data[team])
+            except:
+                does_team_exist = False
+        for team in match["alliances"]["red"]["team_keys"]:
+            try:
+                match_data += flatten_team(teams_data[team])
+            except:
+                does_team_exist = False
+        if does_team_exist:
+            match_data.append(is_match_qual(match["comp_level"]))
+            flattened_train_matches.append(match_data)
+    return flattened_train_matches
+
+
+def run(flattened_train_matches, match_train_results,
+        flattened_test_matches, match_test_results,
+        match_test_alliances, test_matches):
+
+    class_names = ['red win', 'blue win', 'tie']
+
+    model = keras.Sequential([
+        keras.layers.Flatten(input_shape=(43,)),
+        keras.layers.Dense(16, activation="relu"),
+        keras.layers.Dense(3, activation="softmax")
+    ])
+
+    model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
+
+    model.fit(flattened_train_matches, match_train_results, epochs=5)
+
+    prediction = model.predict(flattened_test_matches)
+
+    for i in range(len(prediction)):
+        print("match key:" + test_matches[i]["key"])
+        print("red alliance:")
+        print(match_test_alliances[i][0])
+        print("blue alliance:")
+        print(match_test_alliances[i][1])
+        print("prediction:")
+        print("red win: " + str(prediction[i][0]))
+        print("blue win: " + str(prediction[i][1]))
+        print("tie: " + str(prediction[i][2]))
+        print("actual result:" + class_names[match_test_results[i]])
